@@ -2,6 +2,8 @@ package utils;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.logging.Logger;
@@ -9,100 +11,64 @@ import java.util.logging.Logger;
 public class PropertiesUtils {
 
     private static final Logger LOGGER = Logger.getLogger(PropertiesUtils.class.getName());
-    private static Properties properties;
-    private static String filePath;
-    private static boolean isInitialized = false;
+    private static final Map<String, Properties> propertiesMap = new HashMap<>(); // Map for platform -> Properties
+    private static final Map<String, Boolean> initializedFiles = new HashMap<>();
 
-    public static void initialize(String filePath) {
-        if (isInitialized && PropertiesUtils.filePath.equals(filePath)) {
-            LOGGER.info("Properties already initialized with file: " + filePath);
+    public static synchronized void initialize(String propName, String filePath) {
+        if (initializedFiles.getOrDefault(propName, false)) {
+            LOGGER.info("Properties already initialized for platform: " + propName);
             return;
         }
-        PropertiesUtils.filePath = filePath;
-        properties = new Properties();
+        Properties properties = new Properties();
         try (FileInputStream fis = new FileInputStream(filePath)) {
             properties.load(fis);
-            isInitialized = true;
-            LOGGER.info("Successfully loaded properties file: " + filePath);
+            propertiesMap.put(propName, properties);
+            initializedFiles.put(propName, true);
+            LOGGER.info("Loaded properties for " + propName + " from " + filePath);
         } catch (IOException e) {
-            LOGGER.severe("Failed to load properties file: " + filePath + ". Error: " + e.getMessage());
-            throw new RuntimeException("Could not load properties file: " + filePath, e);
+            LOGGER.severe("Failed to load properties for " + propName + ": " + e.getMessage());
+            throw new RuntimeException("Could not load properties file for " + propName, e);
         }
     }
-    private static void checkInitialization() {
-        if (!isInitialized) {
-            throw new IllegalStateException("PropertiesReader is not initialized. Call initialize(String filePath) first.");
-        }
+
+    public static Optional<String> getProperty(String platform, String key) {
+        checkInitialization(platform);
+        String value = propertiesMap.get(platform).getProperty(key);
+        return value != null ? Optional.of(value) : Optional.empty();
     }
-    public static Optional<String> getProperty(String key) {
-        checkInitialization();
-        String value = properties.getProperty(key);
-        if (value == null) {
-            LOGGER.warning("Property key '" + key + "' not found in " + filePath);
-            return Optional.empty();
-        }
-        return Optional.of(value);
-    }
-    public static String getProperty(String key, String defaultValue) {
-        checkInitialization();
-        return properties.getProperty(key, defaultValue);
-    }
-    public static Optional<Integer> getPropertyAsInt(String key) {
-        checkInitialization();
-        String value = properties.getProperty(key);
-        if (value == null) {
-            LOGGER.warning("Property key '" + key + "' not found in " + filePath);
-            return Optional.empty();
-        }
+
+    public static String getPropertyAsString(String propName, String key, String defaultValue) {
+        checkInitialization(propName);
+        String value = propertiesMap.get(propName).getProperty(key);
+        if (value == null) return defaultValue;
         try {
-            return Optional.of(Integer.parseInt(value));
+            return value;
         } catch (NumberFormatException e) {
-            LOGGER.warning("Invalid integer format for key '" + key + "' with value '" + value + "'");
-            return Optional.empty();
-        }
-    }
-    public static int getPropertyAsInt(String key, int defaultValue) {
-        checkInitialization();
-        String value = properties.getProperty(key);
-        if (value == null) {
-            LOGGER.warning("Property key '" + key + "' not found in " + filePath);
             return defaultValue;
         }
+    }
+
+    public static int getPropertyAsInt(String propName, String key, int defaultValue) {
+        checkInitialization(propName);
+        String value = propertiesMap.get(propName).getProperty(key);
+        if (value == null) return defaultValue;
         try {
             return Integer.parseInt(value);
         } catch (NumberFormatException e) {
-            LOGGER.warning("Invalid integer format for key '" + key + "' with value '" + value + "'");
             return defaultValue;
         }
     }
-    public static boolean hasProperty(String key) {
-        checkInitialization();
-        return properties.containsKey(key);
+
+    public static boolean getPropertyAsBoolean(String platform, String key, boolean defaultValue) {
+        checkInitialization(platform);
+        String value = propertiesMap.get(platform).getProperty(key);
+        if (value == null) return defaultValue;
+        return Boolean.parseBoolean(value);
     }
-    public static Optional<Boolean> getPropertyAsBoolean(String key) {
-        checkInitialization();
-        String value = properties.getProperty(key);
-        if (value == null) {
-            LOGGER.warning("Property key '" + key + "' not found in " + filePath);
-            return Optional.empty();
+
+    private static void checkInitialization(String platform) {
+        if (!initializedFiles.getOrDefault(platform, false)) {
+            throw new IllegalStateException("Properties not initialized for platform: " + platform);
         }
-        if (value.trim().equalsIgnoreCase("true") || value.trim().equalsIgnoreCase("false")) {
-            return Optional.of(Boolean.parseBoolean(value));
-        }
-        LOGGER.warning("Invalid boolean format for key '" + key + "' with value '" + value + "'");
-        return Optional.empty();
-    }
-    public static boolean getPropertyAsBoolean(String key, boolean defaultValue) {
-        checkInitialization();
-        String value = properties.getProperty(key);
-        if (value == null) {
-            LOGGER.warning("Property key '" + key + "' not found in " + filePath);
-            return defaultValue;
-        }
-        if (value.trim().equalsIgnoreCase("true") || value.trim().equalsIgnoreCase("false")) {
-            return Boolean.parseBoolean(value);
-        }
-        LOGGER.warning("Invalid boolean format for key '" + key + "' with value '" + value + "'");
-        return defaultValue;
     }
 }
