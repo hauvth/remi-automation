@@ -11,9 +11,8 @@ import java.net.URL;
 import java.util.concurrent.TimeUnit;
 
 public class IOSPlatformDriver {
-    private static final ThreadLocal<IOSDriver> threadLocalDriver = new ThreadLocal<>();
 
-    public static IOSDriver initialize(String appiumServerUrl) {
+    public static IOSDriver initialize() {
         TestConfig config = TestConfig.load("IOS");
         DesiredCapabilities capabilities = new DesiredCapabilities();
         capabilities.setCapability("platformName", config.getPlatformName());
@@ -22,18 +21,9 @@ public class IOSPlatformDriver {
         capabilities.setCapability("appium:app", config.getApp());
         capabilities.setCapability("appium:isHeadless",config.getTestInfo().isHeadless());
         try {
-            IOSDriver driver = new IOSDriver(new URL(appiumServerUrl), capabilities);
-            threadLocalDriver.set(driver);
-            return driver;
+            return new IOSDriver(new URL(config.getAppiumServerUrl()), capabilities);
         } catch (MalformedURLException e) {
             throw new RuntimeException("Invalid Appium URL: " + e.getMessage(), e);
         }
-    }
-    public static IOSDriver get() {
-        IOSDriver driver = threadLocalDriver.get();
-        if (driver == null) {
-            throw new IllegalStateException("IOSDriver not initialized for this thread");
-        }
-        return driver;
     }
 }

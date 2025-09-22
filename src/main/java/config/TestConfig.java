@@ -13,6 +13,7 @@ public class TestConfig {
     private String deviceName; // For Android
     private int timeout;
     private boolean headless;
+    private String appiumServerUrl;
     private TestInfo testInfo;
     private TestConfig() {}
 
@@ -28,7 +29,7 @@ public class TestConfig {
         }
         config.timeout = PropertiesUtils.getPropertyAsInt(propName, "timeout", 30);
         config.headless = PropertiesUtils.getPropertyAsBoolean(propName, "headless", false);
-
+        config.appiumServerUrl = PropertiesUtils.getProperty(propName,"URL").orElseThrow(() -> new IllegalStateException("Appium Server URL required "));
         threadLocalConfig.set(config);
         return config;
     }

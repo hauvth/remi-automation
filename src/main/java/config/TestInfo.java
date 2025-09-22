@@ -13,11 +13,12 @@ public class TestInfo {
     private boolean isHeadless;
 
     public TestInfo(){
-        PropertiesUtils.initialize("testInfo","src/main/resources/testInfo.properties");
+        PropertiesUtils.initialize("testInfo");
         this.timeOut = PropertiesUtils.getPropertyAsInt("testInfo","timeOut",5);
         this.isScreenShot = PropertiesUtils.getPropertyAsBoolean("testInfo","timeOut",true);
         this.retry = PropertiesUtils.getPropertyAsInt("testInfo","timeOut",5);
-        this.platform = PropertiesUtils.getPropertyAsString("testInfo","platform","ANDROID");
+        this.platform = System.getProperty("Platform");
         this.isParallel = PropertiesUtils.getPropertyAsBoolean("testInfo","timeOut",true);
+        this.isHeadless = PropertiesUtils.getPropertyAsBoolean("testInfo","headless",false);
     }
 }

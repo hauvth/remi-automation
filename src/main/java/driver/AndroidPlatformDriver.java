@@ -8,8 +8,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 public class AndroidPlatformDriver {
-    private static final ThreadLocal<AndroidDriver> threadLocalDriver = new ThreadLocal<>();
-    public static AndroidDriver initialize(String appiumServerUrl) {
+    public static AndroidDriver initialize() {
         TestConfig config = TestConfig.load("android"); // Load config for Android
 
         DesiredCapabilities capabilities = new DesiredCapabilities();
@@ -19,19 +18,9 @@ public class AndroidPlatformDriver {
         capabilities.setCapability("appium:app", config.getApp());
         capabilities.setCapability("waitForSelectorTimeout", config.getTestInfo().getTimeOut());
         try {
-            AndroidDriver driver = new AndroidDriver(new URL(appiumServerUrl), capabilities);
-            threadLocalDriver.set(driver);
-            return driver;
+            return new AndroidDriver(new URL(config.getAppiumServerUrl()), capabilities);
         } catch (MalformedURLException e) {
             throw new RuntimeException("Invalid Appium URL: " + e.getMessage(), e);
         }
-    }
-
-    public static AndroidDriver get() {
-        AndroidDriver driver = threadLocalDriver.get();
-        if (driver == null) {
-            throw new IllegalStateException("AndroidDriver not initialized for this thread");
-        }
-        return driver;
     }
 }

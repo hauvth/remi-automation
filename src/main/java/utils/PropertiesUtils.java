@@ -13,11 +13,23 @@ public class PropertiesUtils {
     private static final Logger LOGGER = Logger.getLogger(PropertiesUtils.class.getName());
     private static final Map<String, Properties> propertiesMap = new HashMap<>(); // Map for platform -> Properties
     private static final Map<String, Boolean> initializedFiles = new HashMap<>();
-
-    public static synchronized void initialize(String propName, String filePath) {
+    private static final String IOS_PROP_FILE = "src/test/resources/ios.properties";
+    private static final String ANDROID_PROP_FILE = "src/test/resources/android.properties";
+    private static final String TESTINFO_PROP_FILE = "src/test/resources/testInfo.properties";
+    public static synchronized void initialize(String propName) {
         if (initializedFiles.getOrDefault(propName, false)) {
             LOGGER.info("Properties already initialized for platform: " + propName);
             return;
+        }
+        String filePath;
+        if ("IOS".equalsIgnoreCase(propName)) {
+            filePath = IOS_PROP_FILE;
+        } else if ("ANDROID".equalsIgnoreCase(propName)) {
+            filePath = ANDROID_PROP_FILE;
+        } else if ("testInfo".equalsIgnoreCase(propName)) {
+            filePath = TESTINFO_PROP_FILE;
+        } else {
+            throw new IllegalArgumentException("Unknown properties name: " + propName);
         }
         Properties properties = new Properties();
         try (FileInputStream fis = new FileInputStream(filePath)) {
