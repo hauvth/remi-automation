@@ -31,13 +31,13 @@ public class ExtentReportManager {
         }
     }
 
-    public static void createTest(String testName, String browser) {
-        ExtentTest test = extentReports.createTest(testName + " (Browser: " + browser + ")");
+    public static void createTest(String testName) {
+        ExtentTest test = extentReports.createTest(testName);
         extentTest.set(test);
     }
 
-    public static void createCucumberTest(Scenario scenario, String browser) {
-        ExtentTest test = extentReports.createTest(scenario.getName() + " (Browser: " + browser + ")");
+    public static void createCucumberTest(Scenario scenario) {
+        ExtentTest test = extentReports.createTest(scenario.getName());
         test.assignCategory(scenario.getSourceTagNames().toString());
         extentTest.set(test);
     }
@@ -49,6 +49,12 @@ public class ExtentReportManager {
     public static void logMessage(Status status, String message) {
         if (getTest() != null) {
             getTest().log(status, message);
+        }
+    }
+
+    public static void info(String message) {
+        if (getTest() != null) {
+            getTest().info( message);
         }
     }
 }

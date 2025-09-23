@@ -2,6 +2,7 @@ package utils;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -10,77 +11,57 @@ import java.util.logging.Logger;
 
 public class PropertiesUtils {
 
-    private static final Logger LOGGER = Logger.getLogger(PropertiesUtils.class.getName());
-    private static final Map<String, Properties> propertiesMap = new HashMap<>(); // Map for platform -> Properties
-    private static final Map<String, Boolean> initializedFiles = new HashMap<>();
-    private static final String IOS_PROP_FILE = "src/test/resources/ios.properties";
-    private static final String ANDROID_PROP_FILE = "src/test/resources/android.properties";
-    private static final String TESTINFO_PROP_FILE = "src/test/resources/testInfo.properties";
-    public static synchronized void initialize(String propName) {
-        if (initializedFiles.getOrDefault(propName, false)) {
-            LOGGER.info("Properties already initialized for platform: " + propName);
-            return;
-        }
-        String filePath;
-        if ("IOS".equalsIgnoreCase(propName)) {
-            filePath = IOS_PROP_FILE;
-        } else if ("ANDROID".equalsIgnoreCase(propName)) {
-            filePath = ANDROID_PROP_FILE;
-        } else if ("testInfo".equalsIgnoreCase(propName)) {
-            filePath = TESTINFO_PROP_FILE;
-        } else {
-            throw new IllegalArgumentException("Unknown properties name: " + propName);
-        }
-        Properties properties = new Properties();
-        try (FileInputStream fis = new FileInputStream(filePath)) {
-            properties.load(fis);
-            propertiesMap.put(propName, properties);
-            initializedFiles.put(propName, true);
-            LOGGER.info("Loaded properties for " + propName + " from " + filePath);
+    private Properties properties;
+
+    public PropertiesUtils(String filePath) {
+        properties = new Properties();
+        loadProperties(filePath);
+    }
+
+    private void loadProperties(String filePath) {
+        try (InputStream input = new FileInputStream(filePath)) {
+            properties.load(input);
         } catch (IOException e) {
-            LOGGER.severe("Failed to load properties for " + propName + ": " + e.getMessage());
-            throw new RuntimeException("Could not load properties file for " + propName, e);
+            throw new RuntimeException("Không thể đọc file properties: " + filePath, e);
         }
     }
 
-    public static Optional<String> getProperty(String platform, String key) {
-        checkInitialization(platform);
-        String value = propertiesMap.get(platform).getProperty(key);
-        return value != null ? Optional.of(value) : Optional.empty();
+    public String getProperty(String key) {
+        return properties.getProperty(key);
     }
 
-    public static String getPropertyAsString(String propName, String key, String defaultValue) {
-        checkInitialization(propName);
-        String value = propertiesMap.get(propName).getProperty(key);
-        if (value == null) return defaultValue;
-        try {
-            return value;
-        } catch (NumberFormatException e) {
-            return defaultValue;
+    public String getProperty(String key, String defaultValue) {
+        return properties.getProperty(key, defaultValue);
+    }
+
+    public int getIntProperty(String key) {
+        String value = getProperty(key);
+        if (value == null) {
+            throw new IllegalArgumentException("Key không tồn tại: " + key);
         }
+        return Integer.parseInt(value);
     }
 
-    public static int getPropertyAsInt(String propName, String key, int defaultValue) {
-        checkInitialization(propName);
-        String value = propertiesMap.get(propName).getProperty(key);
-        if (value == null) return defaultValue;
-        try {
-            return Integer.parseInt(value);
-        } catch (NumberFormatException e) {
-            return defaultValue;
+    public int getIntProperty(String key, int defaultValue) {
+        String value = getProperty(key);
+        return value != null ? Integer.parseInt(value) : defaultValue;
+    }
+
+    public boolean getBooleanProperty(String key) {
+        String value = getProperty(key);
+        if (value == null) {
+            throw new IllegalArgumentException("Key không tồn tại: " + key);
         }
-    }
-
-    public static boolean getPropertyAsBoolean(String platform, String key, boolean defaultValue) {
-        checkInitialization(platform);
-        String value = propertiesMap.get(platform).getProperty(key);
-        if (value == null) return defaultValue;
         return Boolean.parseBoolean(value);
     }
 
-    private static void checkInitialization(String platform) {
-        if (!initializedFiles.getOrDefault(platform, false)) {
-            throw new IllegalStateException("Properties not initialized for platform: " + platform);
-        }
+
+    public boolean getBooleanProperty(String key, boolean defaultValue) {
+        String value = getProperty(key);
+        return value != null ? Boolean.parseBoolean(value) : defaultValue;
+    }
+
+    public boolean containsKey(String key) {
+        return properties.containsKey(key);
     }
 }

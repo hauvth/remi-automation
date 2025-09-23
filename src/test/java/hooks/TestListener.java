@@ -6,6 +6,7 @@ import org.testng.ISuiteListener;
 import org.testng.ITestListener;
 import org.testng.ITestResult;
 import report.ExtentReportManager;
+import utils.LogUtils;
 
 public class TestListener implements ITestListener, ISuiteListener {
 
@@ -15,13 +16,13 @@ public class TestListener implements ITestListener, ISuiteListener {
 
     @Override
     public void onStart(ISuite suite) {
-//        LogUtils.info("Starting Suite: " + suite.getName());
+       LogUtils.info("Starting Suite: " + suite.getName());
         ExtentReportManager.initReports();
     }
 
     @Override
     public void onFinish(ISuite suite) {
-//        LogUtils.info("End Suite: " + suite.getName());
+        LogUtils.info("End Suite: " + suite.getName());
         ExtentReportManager.flushReports();
     }
 
@@ -29,7 +30,7 @@ public class TestListener implements ITestListener, ISuiteListener {
     public void onTestStart(ITestResult result) {
         String browser = result.getTestContext().getCurrentXmlTest().getParameter("BROWSER") != null ?
                 result.getTestContext().getCurrentXmlTest().getParameter("BROWSER") : "chrome";
-        ExtentReportManager.createTest(getTestName(result), browser);
+        ExtentReportManager.createTest(getTestName(result));
 //        LogUtils.info("Test case: " + getTestDescription(result) + " is starting...");
     }
 
