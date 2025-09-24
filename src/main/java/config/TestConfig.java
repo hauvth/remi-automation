@@ -16,7 +16,7 @@ public class TestConfig {
 
     public static TestConfig load() {
         TestConfig config = new TestConfig();
-        PropertiesUtils propertiesUtils = new PropertiesUtils("src/test/resources/config.properties");
+        PropertiesUtils propertiesUtils = new PropertiesUtils("src/main/resources/testInfo.properties");
         config.timeout = propertiesUtils.getIntProperty("timeout",10);
         config.headless = propertiesUtils.getBooleanProperty( "headless", false);
         config.retryCount = propertiesUtils.getIntProperty("retry",2);
